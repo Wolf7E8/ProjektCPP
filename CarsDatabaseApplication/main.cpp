@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 
     DB_object.createDB(dir);
     DB_object.createTable(dir);
+    DB_object.insertData(dir);
 
 
     QApplication a(argc, argv);
