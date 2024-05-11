@@ -37,85 +37,105 @@ int Database::createTable(const char* s) {
     return exit;
 }
 
-// Implementacje innych funkcji pozostaj¹ bez zmian
 
-int Database::insertData(const char* s)
-{
-    sqlite3* DB;
-    char* messageError;
-
-    int exit = sqlite3_open(s, &DB);
-
-    std::string sql("INSERT INTO CARS_SPECIFICATIONS (BRAND, MODEL, POWER_HP) VALUES('Volvo', 'x40', 150);");
-
-    exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
-    if (exit != SQLITE_OK)
-    {
-        std::cerr << "Error Insert" << std::endl;
-        sqlite3_free(messageError);
-    }
-    else
-        std::cout << "Records created Successfully!" << std::endl;
-
-    return 0;
-}
-
-int Database::updateData(const char* s)
-{
-    sqlite3* DB;
-    char* messageError;
-
-    int exit = sqlite3_open(s, &DB);
-
-    std::string sql("UPDATE GRADES SET GRADE = 'A' WHERE LNAME = 'Cooper'");
-
-    exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
-    if (exit != SQLITE_OK)
-    {
-        std::cerr << "Error Insert" << std::endl;
-        sqlite3_free(messageError);
-    }
-    else
-        std::cout << "Records created Successfully!" << std::endl;
-
-    return 0;
-}
-
-int Database::deleteData(const char* s)
-{
-    sqlite3* DB;
-
-    int exit = sqlite3_open(s, &DB);
-
-    std::string sql = "DELETE FROM GRADES;";
-    sqlite3_exec(DB, sql.c_str(), callback, NULL, NULL);
-
-    return 0;
-}
-
-int Database::selectData(const char* s)     //metoda odpowiadaj¹ca za zdefiniowanie zapytania do bazy danych i wywo³¹nia funkcji wybieraj¹cej
-{
-    sqlite3* DB;
-
-    int exit = sqlite3_open(s, &DB);
-    std::string sql = "SELECT * FROM GRADES;"; //tu nie bêdzie grades
-
-    sqlite3_exec(DB, sql.c_str(), callback, NULL, NULL); //wywo³ywane odsobno dla ka¿dego wiersza wyniku
-
-    return 0;
-}
-
-int Database::callback(void* NotUsed, int argc, char** argv, char** azColName)
-{
-    for (int i = 0; i < argc; i++)
-    {
-        std::cout << azColName[i] << ": " << argv[i] << std::endl;
+int Database::insertData(const QString& dbPath, const QString& brand, const QString& model, const QString& powerHp,
+    const QString& capacityL, const QString& engine, const QString& type, const QString& fuel,
+    const QString& consumptionLPer100Km, const QString& productionYear, const QString& numberOfDoors,
+    const QString& version) {
+    sqlite3* db;
+    if (sqlite3_open(dbPath.toStdString().c_str(), &db) != SQLITE_OK) {
+        qDebug() << "Cannot open database: " << sqlite3_errmsg(db);
+        return -1;  // Return error if database cannot be opened
     }
 
-    std::cout << std::endl;
+    const char* sql = "INSERT INTO CARS_SPECIFICATIONS (BRAND, MODEL, POWER_HP, CAPACITY_L, ENGINE, TYPE, FUEL, CONSUMPTION_L_PER_100KM, PRODUCTION_YEAR, NUMBER_OF_DOORS, VERSION) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    sqlite3_stmt* stmt;
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        qDebug() << "Failed to prepare statement: " << sqlite3_errmsg(db);
+        sqlite3_close(db);
+        return -1;  // Handle error in preparing the statement
+    }
 
-    return 0;
+    sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+    sqlite3_bind_text(stmt, 1, brand.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, model.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, powerHp.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, capacityL.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 5, engine.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 6, type.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 7, fuel.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 8, consumptionLPer100Km.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 9, productionYear.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 10, numberOfDoors.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 11, version.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        qDebug() << "Error inserting data: " << sqlite3_errmsg(db);
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return -1;  // Handle error in executing the statement
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    return 0;  // Return success
 }
+
+int Database::updateData(const QString& dbPath, int id, const QString& brand, const QString& model, const QString& powerHp,
+    const QString& capacityL, const QString& engine, const QString& type, const QString& fuel,
+    const QString& consumptionLPer100Km, const QString& productionYear, const QString& numberOfDoors,
+    const QString& version) {
+    sqlite3* db;
+    sqlite3_open(dbPath.toStdString().c_str(), &db);
+
+    const char* sql = "UPDATE CARS_SPECIFICATIONS SET BRAND = ?, MODEL = ?, POWER_HP = ?, CAPACITY_L = ?, ENGINE = ?, TYPE = ?, FUEL = ?, CONSUMPTION_L_PER_100KM = ?, PRODUCTION_YEAR = ?, NUMBER_OF_DOORS = ?, VERSION = ? WHERE ID = ?;";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+
+    // Bind parameters
+    sqlite3_bind_text(stmt, 1, brand.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, model.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, powerHp.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, capacityL.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 5, engine.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 6, type.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 7, fuel.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 8, consumptionLPer100Km.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 9, productionYear.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 10, numberOfDoors.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 11, version.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 12, id);
+
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        qDebug() << "Error updating data: " << sqlite3_errmsg(db);
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    return result == SQLITE_DONE ? 0 : -1;
+}
+
+int Database::deleteData(const QString& dbPath, int id) {
+    sqlite3* db;
+    sqlite3_open(dbPath.toStdString().c_str(), &db);
+
+    const char* sql = "DELETE FROM CARS_SPECIFICATIONS WHERE ID = ?;";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
+    sqlite3_bind_int(stmt, 1, id);  // Powi¹zanie ID rekordu z parametrem zapytania
+
+    int result = sqlite3_step(stmt);
+    if (result != SQLITE_DONE) {
+        qDebug() << "Error deleting data: " << sqlite3_errmsg(db);
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    return result == SQLITE_DONE ? 0 : -1;
+}
+
 
 QSqlQueryModel* Database::getCarSpecificationsModel(const char* s) {
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "ConnectionName");
@@ -136,4 +156,44 @@ QSqlQueryModel* Database::getCarSpecificationsModel(const char* s) {
 
 QString Database::getCarSpecificationsQuery(const QString& dbPath) {
     return "SELECT * FROM CARS_SPECIFICATIONS";
+}
+
+QSqlQueryModel* Database::selectFilteredData(const QString& dbPath, const QString& brand, const QString& model, const QString& powerHp,
+    const QString& capacityL, const QString& engine, const QString& type, const QString& fuel,
+    const QString& consumptionLPer100Km, const QString& productionYear, const QString& numberOfDoors,
+    const QString& version) {
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(dbPath);
+    if (!db.open()) {
+        qDebug() << "Cannot open database:" << db.lastError().text();
+        return nullptr;
+    }
+
+    QSqlQueryModel* qmodel = new QSqlQueryModel();
+    QSqlQuery query(db);
+    QString sql = "SELECT * FROM CARS_SPECIFICATIONS WHERE "
+        "BRAND LIKE :brand AND MODEL LIKE :model AND POWER_HP LIKE :powerHp AND "
+        "CAPACITY_L LIKE :capacityL AND ENGINE LIKE :engine AND TYPE LIKE :type AND "
+        "FUEL LIKE :fuel AND CONSUMPTION_L_PER_100KM LIKE :consumptionLPer100Km AND "
+        "PRODUCTION_YEAR LIKE :productionYear AND NUMBER_OF_DOORS LIKE :numberOfDoors AND "
+        "VERSION LIKE :version;";
+
+    query.prepare(sql);
+    query.bindValue(":brand", '%' + brand + '%');
+    query.bindValue(":model", '%' + model + '%');
+    query.bindValue(":powerHp", powerHp.isEmpty() ? "%%" : '%' + powerHp + '%');
+    query.bindValue(":capacityL", capacityL.isEmpty() ? "%%" : '%' + capacityL + '%');
+    query.bindValue(":engine", engine.isEmpty() ? "%%" : '%' + engine + '%');
+    query.bindValue(":type", type.isEmpty() ? "%%" : '%' + type + '%');
+    query.bindValue(":fuel", fuel.isEmpty() ? "%%" : '%' + fuel + '%');
+    query.bindValue(":consumptionLPer100Km", consumptionLPer100Km.isEmpty() ? "%%" : '%' + consumptionLPer100Km + '%');
+    query.bindValue(":productionYear", productionYear.isEmpty() ? "%%" : '%' + productionYear + '%');
+    query.bindValue(":numberOfDoors", numberOfDoors.isEmpty() ? "%%" : '%' + numberOfDoors + '%');
+    query.bindValue(":version", version.isEmpty() ? "%%" : '%' + version + '%');
+    query.exec();
+
+    qmodel->setQuery(query);
+    db.close();
+
+    return qmodel;
 }

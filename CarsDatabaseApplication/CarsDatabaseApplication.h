@@ -5,7 +5,6 @@
 #include "Database.h"
 #include <sqlite3.h>
 #include <QSqlQueryModel>
-#include <QTableView>
 
 class CarsDatabaseApplication : public QMainWindow
 {
@@ -14,9 +13,16 @@ class CarsDatabaseApplication : public QMainWindow
 public:
     CarsDatabaseApplication(QWidget *parent = nullptr);
     ~CarsDatabaseApplication();
+    void addData();
+    void deleteData();
+    void updateData();
+    void selectData();
+    void searchData();
 
-private slots: // Dodaj sekcjê slots, jeœli jeszcze nie istnieje
-    void refreshData(); // Deklaracja slotu do odœwie¿ania danych
+private slots:
+    void refreshData();
+    void sortProductionYear();
+
 
 private:
     Ui::CarsDatabaseApplicationClass ui;

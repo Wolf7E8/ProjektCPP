@@ -8,9 +8,9 @@ int main(int argc, char *argv[])
     const char* dir = "C:\\Users\\grzeg\\Desktop\\Visual_Studio_2022\\ProjektCPP\\CARS.db";
     sqlite3* DB;
 
+
     DB_object.createDB(dir);
     DB_object.createTable(dir);
-    DB_object.insertData(dir);
 
   
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     w.setWindowIcon(QIcon("C:\\Users\\grzeg\\Desktop\\Visual_Studio_2022\\ProjektCPP\\car_icon.ico"));
 
-    w.setFixedSize(991, 658);
+    w.setFixedSize(985, 652);
 
     w.show();
     return a.exec();
