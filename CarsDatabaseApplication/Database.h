@@ -22,8 +22,6 @@ public:
 		const QString& consumptionLPer100Km, const QString& productionYear, const QString& numberOfDoors,
 		const QString& version);
 	static int deleteData(const QString& dbPath, int id);
-	static int selectData(const char* s);
-	static int callback(void* NotUsed, int argc, char** argv, char** azColName);
 
 	static QSqlQueryModel* getCarSpecificationsModel(const char* s);
 	static QString getCarSpecificationsQuery(const QString& dbPath);

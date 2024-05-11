@@ -72,7 +72,7 @@ void CarsDatabaseApplication::addData() {
 }
 
 void CarsDatabaseApplication::deleteData() {
-    int id = ui.input_ID->toPlainText().toInt();  // Konwersja QString na int
+    int id = ui.input_ID->toPlainText().toInt();
     QString dbPath = "C:\\Users\\grzeg\\Desktop\\Visual_Studio_2022\\ProjektCPP\\CARS.db";
 
     int result = Database::deleteData(dbPath, id);
@@ -83,12 +83,12 @@ void CarsDatabaseApplication::deleteData() {
         qDebug() << "Failed to delete record";
     }
 
-    refreshData();  // Odœwie¿enie danych w tabeli
+    refreshData();
 }
 
 void CarsDatabaseApplication::updateData() {
     // Konwersja i pobranie wartoœci z interfejsu u¿ytkownika
-    int id = ui.input_ID->toPlainText().toInt();  // Konwersja QString na int
+    int id = ui.input_ID->toPlainText().toInt();
     QString brand = ui.input_BRAND->toPlainText();
     QString model = ui.input_MODEL->toPlainText();
     QString powerHp = ui.input_POWER->toPlainText();
@@ -101,10 +101,8 @@ void CarsDatabaseApplication::updateData() {
     QString numberOfDoors = ui.input_NoD->toPlainText();
     QString version = ui.input_VERSION->toPlainText();
 
-    // Œcie¿ka do bazy danych
     QString dbPath = "C:\\Users\\grzeg\\Desktop\\Visual_Studio_2022\\ProjektCPP\\CARS.db";
 
-    // Wywo³anie funkcji aktualizuj¹cej dane w bazie danych
     int result = Database::updateData(dbPath, id, brand, model, powerHp, capacityL, engine, type, fuel,
         consumptionLPer100Km, productionYear, numberOfDoors, version);
     if (result == 0) {
@@ -114,7 +112,7 @@ void CarsDatabaseApplication::updateData() {
         qDebug() << "Failed to update record";
     }
 
-    refreshData();  // Odœwie¿enie danych w tabeli
+    refreshData();
 }
 
 void CarsDatabaseApplication::selectData() {
@@ -226,16 +224,16 @@ void CarsDatabaseApplication::sortProductionYear() {
         return;
     }
 
-    QSqlQueryModel* model = new QSqlQueryModel;  // Tworzenie nowego modelu
-    model->setQuery("SELECT * FROM CARS_SPECIFICATIONS ORDER BY PRODUCTION_YEAR ASC", db); // Wykonanie zapytania SQL
+    QSqlQueryModel* model = new QSqlQueryModel;                                                         // Tworzenie nowego modelu
+    model->setQuery("SELECT * FROM CARS_SPECIFICATIONS ORDER BY PRODUCTION_YEAR ASC", db);              // Wykonanie zapytania SQL
 
     if (model->lastError().isValid()) {
         qDebug() << "Error sorting data:" << model->lastError().text();
     }
     else {
         qDebug() << "Data sorted successfully.";
-        ui.output_table->setModel(model);  // Ustawienie modelu dla widoku tabeli
+        ui.output_table->setModel(model);                                                               // Ustawienie modelu dla widoku tabeli
     }
 
-    db.close(); // Zamkniêcie po³¹czenia z baz¹ danych
+    db.close();                                                                                         // Zamkniêcie po³¹czenia z baz¹ danych
 }

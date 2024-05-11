@@ -4,9 +4,9 @@
 #include <QDebug>
 
 int Database::createDB(const char* s) {
-    sqlite3* DB;
-    int exit = sqlite3_open(s, &DB);
-    sqlite3_close(DB);
+    sqlite3* DB;                                                                    //deklaracja wskaŸnika na obiekt bazy danych SQLite
+    int exit = sqlite3_open(s, &DB);                                                //próba otwaracia bazy danych; utworzenie je¿eli nie istnieje
+    sqlite3_close(DB);                                                              //zamkniêcie bd aby unikn¹æ wycieków pamiêci
     return exit;
 }
 
@@ -28,7 +28,7 @@ int Database::createTable(const char* s) {
 
     int exit = sqlite3_open(s, &DB);
     char* messageError;
-    exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
+    exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);                      //wykonanie polecenia sql
     if (exit != SQLITE_OK) {
         std::cerr << "Error Creating Table: " << messageError << std::endl;
         sqlite3_free(messageError);
@@ -45,20 +45,23 @@ int Database::insertData(const QString& dbPath, const QString& brand, const QStr
     sqlite3* db;
     if (sqlite3_open(dbPath.toStdString().c_str(), &db) != SQLITE_OK) {
         qDebug() << "Cannot open database: " << sqlite3_errmsg(db);
-        return -1;  // Return error if database cannot be opened
+        return -1;
     }
 
-    const char* sql = "INSERT INTO CARS_SPECIFICATIONS (BRAND, MODEL, POWER_HP, CAPACITY_L, ENGINE, TYPE, FUEL, CONSUMPTION_L_PER_100KM, PRODUCTION_YEAR, NUMBER_OF_DOORS, VERSION) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-    sqlite3_stmt* stmt;
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+    const char* sql = "INSERT INTO CARS_SPECIFICATIONS (BRAND, MODEL, "
+        "POWER_HP, CAPACITY_L, ENGINE, TYPE, FUEL, CONSUMPTION_L_PER_100KM, "
+        "PRODUCTION_YEAR, NUMBER_OF_DOORS, VERSION) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    sqlite3_stmt* stmt;                                                                     //Deklaracja wskaŸnika na strukturê do zarz¹dzania zapytaniem przygotowanym
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {                     //Przygotowanie zapytania SQL do wykonania
         qDebug() << "Failed to prepare statement: " << sqlite3_errmsg(db);
         sqlite3_close(db);
-        return -1;  // Handle error in preparing the statement
+        return -1;
     }
 
+    // Przypisanie wartoœci do poszczególnych parametrów zapytania SQL
     sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
-    sqlite3_bind_text(stmt, 1, brand.toStdString().c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, model.toStdString().c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 1, brand.toStdString().c_str(), -1, SQLITE_TRANSIENT);          // -1 odpowiada sa obliczenie d³ugoœci zmiennej
+    sqlite3_bind_text(stmt, 2, model.toStdString().c_str(), -1, SQLITE_TRANSIENT);          //SQLITE_TRANSIENT to funkcja która mówi, ¿eby SQLite wykona³ kopiê danych. Odpornoœæ na zmiany w trakcie
     sqlite3_bind_text(stmt, 3, powerHp.toStdString().c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 4, capacityL.toStdString().c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 5, engine.toStdString().c_str(), -1, SQLITE_TRANSIENT);
@@ -69,17 +72,17 @@ int Database::insertData(const QString& dbPath, const QString& brand, const QStr
     sqlite3_bind_text(stmt, 10, numberOfDoors.toStdString().c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 11, version.toStdString().c_str(), -1, SQLITE_TRANSIENT);
 
-    int result = sqlite3_step(stmt);
+    int result = sqlite3_step(stmt);                                                        //Wykonanie zapytania
     if (result != SQLITE_DONE) {
         qDebug() << "Error inserting data: " << sqlite3_errmsg(db);
         sqlite3_finalize(stmt);
         sqlite3_close(db);
-        return -1;  // Handle error in executing the statement
+        return -1;
     }
 
-    sqlite3_finalize(stmt);
+    sqlite3_finalize(stmt);                                                                 //Zakoñczenie pracy ze zmienn¹ stmt
     sqlite3_close(db);
-    return 0;  // Return success
+    return 0;
 }
 
 int Database::updateData(const QString& dbPath, int id, const QString& brand, const QString& model, const QString& powerHp,
@@ -89,11 +92,13 @@ int Database::updateData(const QString& dbPath, int id, const QString& brand, co
     sqlite3* db;
     sqlite3_open(dbPath.toStdString().c_str(), &db);
 
-    const char* sql = "UPDATE CARS_SPECIFICATIONS SET BRAND = ?, MODEL = ?, POWER_HP = ?, CAPACITY_L = ?, ENGINE = ?, TYPE = ?, FUEL = ?, CONSUMPTION_L_PER_100KM = ?, PRODUCTION_YEAR = ?, NUMBER_OF_DOORS = ?, VERSION = ? WHERE ID = ?;";
+    const char* sql = "UPDATE CARS_SPECIFICATIONS SET BRAND = ?, "
+        "MODEL = ?, POWER_HP = ?, CAPACITY_L = ?, ENGINE = ?, TYPE = ?, "
+        "FUEL = ?, CONSUMPTION_L_PER_100KM = ?, PRODUCTION_YEAR = ?, "
+        "NUMBER_OF_DOORS = ?, VERSION = ? WHERE ID = ?;";
     sqlite3_stmt* stmt;
     sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
 
-    // Bind parameters
     sqlite3_bind_text(stmt, 1, brand.toStdString().c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, model.toStdString().c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 3, powerHp.toStdString().c_str(), -1, SQLITE_TRANSIENT);
@@ -124,7 +129,7 @@ int Database::deleteData(const QString& dbPath, int id) {
     const char* sql = "DELETE FROM CARS_SPECIFICATIONS WHERE ID = ?;";
     sqlite3_stmt* stmt;
     sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr);
-    sqlite3_bind_int(stmt, 1, id);  // Powi¹zanie ID rekordu z parametrem zapytania
+    sqlite3_bind_int(stmt, 1, id);                                                          // Powi¹zanie ID rekordu z parametrem zapytania
 
     int result = sqlite3_step(stmt);
     if (result != SQLITE_DONE) {
@@ -149,8 +154,8 @@ QSqlQueryModel* Database::getCarSpecificationsModel(const char* s) {
     QSqlQuery query("SELECT * FROM CARS_SPECIFICATIONS", db);
     model->setQuery(query);
 
-    db.close(); // Zamkniêcie bazy danych po zakoñczeniu zapytania
-    QSqlDatabase::removeDatabase(QSqlDatabase::defaultConnection); // Usuniêcie identyfikatora po³¹czenia
+    db.close();                                                                             // Zamkniêcie bazy danych po zakoñczeniu zapytania
+    QSqlDatabase::removeDatabase(QSqlDatabase::defaultConnection);                          // Usuniêcie identyfikatora po³¹czenia
     return model;
 }
 
